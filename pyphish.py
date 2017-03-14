@@ -8,11 +8,11 @@ import base64
 
 
 
-filename = ".\\index.html"
-phish_f = ".\\phish.html"
-targets = ".\\targets.csv"
+#filename = ".\\index.html"
+phish_f = "phish.html"
+targets = "targets.csv"
 #ph_msg = ".\\ph_msg.txt"
-fin = open(filename, 'rb').read()
+#fin = open(filename, 'rb').read()
 pin = open(phish_f, 'rb').read()
 tin = open(targets, 'rb')
 csv_r = csv.DictReader(tin, dialect='excel')
@@ -66,7 +66,8 @@ def pop_csv():
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
 		#self.write(csv_r)
-		self.write(disp)
+		#self.write(disp)
+		self.write(pin)
 	
 class StopHandler(tornado.web.RequestHandler):
     #def initialize(self, db):
@@ -112,7 +113,7 @@ def make_app():
 
 def startTornado():
 	app = make_app()
-	app.listen(8888)
+	app.listen(80)
 	tornado.ioloop.IOLoop.instance().start()
 	
 def stopTornado():
@@ -120,23 +121,23 @@ def stopTornado():
     ioloop.add_callback(ioloop.stop)
     print "Asked Tornado to exit"
 
-def target():
-	rownum = 0
-	print ("Csv line number is " %s, csv_r.line_num())
-	'''for row in csv_r:
-		# Save header row.
-		if rownum ==0:
-			header = row
-		else:
-			colnum = 0
-			for col in row:
-				print '%-8s: %s' % (header[colnum], col)
-				colnum += 1
-				rownum += 1'''
+#def target():
+#	rownum = 0
+#	print ("Csv line number is " %s, csv_r.line_num())
+#	'''for row in csv_r:
+#		# Save header row.
+#		if rownum ==0:
+#			header = row
+#		else:
+#			colnum = 0
+#			for col in row:
+#				print '%-8s: %s' % (header[colnum], col)
+#				colnum += 1
+#				rownum += 1'''
 				
 
 def main():
-
+	print("Starting web server...")
 	#pop_csv()
 	t = threading.Thread(target=startTornado) 
 	try:
