@@ -25,7 +25,8 @@ msgText = MIMEText('This is the alternative plain text message.')
 msgAlternative.attach(msgText)
 
 # We reference the image in the IMG SRC attribute by the ID we give it below
-msgText = MIMEText('<h1>Hi, Nick,<br><br>We just wanted to follow up from our meeting the other day when we talked about zeroing out the balance.  Please let me know!<br><br>Best,<br>Ben<br><br>P.S.<a href="http://mailserver.s0stgakqb2ju1ifzv343gza4hb.yx.internal.cloudapp.net"><b>Please go update your account with us!<br><br><img src="cid:image1"><br></a>', 'html')
+mp = open('msg.htm', 'rb')
+msgText = MIMEText(mp, 'html')
 msgAlternative.attach(msgText)
 
 # This example assumes the image is in the current directory
