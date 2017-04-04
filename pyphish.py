@@ -16,34 +16,65 @@ targets = "targets.csv"
 pin = open(phish_f, 'rb').read()
 tin = open(targets, 'rb')
 csv_r = csv.DictReader(tin, dialect='excel')
-row_count = len(csv_d)
+#row_count = len(csv_r)
 disp = {}
+db = {}
 caught = {}
 i = 0
+j = 0
 fr_addr = 'accounts@alitheia.com'
 to_addr = ''
 #msg = open(ph_msg, 'rb').read()
 ph_link = ''
+event = 0
+
 
 def signal_handler(signal, frame):
-	print('Caught SIGINT')
+	print('Caught %s' % signal)
 	print "Stopping phishing campaign..."
         ioloop = tornado.ioloop.IOLoop.instance()
         ioloop.add_callback(ioloop.stop)
+	e.set()
         print "Asked Tornado to exit"
+	sys.exit(0)
 
-def phish_campaign():
-	i = 0
-       	with open('targets.csv') as csvfile:
-               	reader = csv.DictReader(csvfile)
-               	for row in reader:
-                       	if (i == 100 | i == 500 | i == 1000 | i == 2000):
-				time.sleep(2)
+class phish_campaign:
+	#global db
+        #global disp	
+	#target = {}
+	#csvfile = open('targets.csv', 'rb')
+	#reader = csv.DictReader(csvfile, dialect='excel')
+
+	def __init__(self):
+		target = {}
+	       	csvfile = 'targets.csv'
+	        reader = csv.DictReader(csvfile, dialect='excel')
+		global j
+		global db
+		global e
+		#global disp
+		targets = {}
+		print 'Rows in DB = %d' % len(db)
+		while j < len(db) and not e.isSet():
+			#print db[j]
+			print 'E.isSet() = %s' % e.isSet()
+			if (j % 100 == 0):
+				if (j != 0):
+					print 'Sleeping for 10s'
+					time.sleep(10)
+					if not e.isSet():
+					#print row['Email'], row['First Name']
+						print 'J = %d' % j #, row['Email']
+						targets[j] = {"Email": db[j]['Email'], "F_name": db[j]['F_name']}
+  		               			testmail(targets[j])
 			else:
-				print row['Email'], row['First Name']
-                        	disp[i] = {"Email": row['Email'], "F_name": row['First Name']}
-       	                	i += 1	
-			
+				#print row['Email'], row['First Name']
+     	               		targets[j] = {"Email": db[j]['Email'], "F_name": db[j]['F_name']}
+				testmail(targets[j])
+				#print j
+			print j
+  	               	j += 1
+
 
 def testmail(target):
 
@@ -53,7 +84,6 @@ def testmail(target):
 	from email.MIMEMultipart import MIMEMultipart
 	from email.MIMEText import MIMEText
 	from email.MIMEImage import MIMEImage
-
 	strFrom = '"Accounts Receivable"<internal@accounts.westcentralus.cloudapp.azure.com>'
 	strTo = target['Email']
 	strFname = target['F_name']
@@ -88,22 +118,24 @@ def testmail(target):
 
 	# Send the email (this example assumes SMTP authentication is required)
 	import smtplib
-	smtp = smtplib.SMTP()
-	smtp.connect('localhost')
-	smtp.sendmail(strFrom, strTo, msgRoot.as_string())
-	print msgRoot.as_string()
-	smtp.quit()
+	#smtp = smtplib.SMTP()
+	#smtp.connect('localhost')
+	#smtp.sendmail(strFrom, strTo, msgRoot.as_string())
+	print "Email sent to %s" % msgRoot['To']
+	#smtp.quit()
 
 
 
 def pop_csv():
 	i = 0
-	with open('targets.csv') as csvfile:
-		reader = csv.DictReader(csvfile)
-		for row in reader:
-			#print row['Email'], row['First Name']
-			disp[i] = {"Email": row['Email'], "F_name": row['First Name']}
-			i += 1
+	global reader
+	global fo
+	fo = open('targets.csv', 'rb')
+	reader = csv.DictReader(fo)
+	for row in reader:
+		#print row['Email'], row['First Name']
+		db[i] = {"Email": row['Email'], "F_name": row['First Name']}
+		i += 1
 		# while rownum < rowtot:
 		# print rownum
 		# if rownum == 0:
@@ -125,8 +157,8 @@ def pop_csv():
 				# colnum += 1
 				# rownum += 1'''
 	#print(disp)
-		print row_count
-		print 'Dear %s,\n\tWe regret to inform you that you have been phished.\n\n%s' % (disp[2]["F_name"], base64.b64encode(disp[2]["Email"]))
+	print 'Phishing targets populated.'
+		#print 'Dear %s,\n\tWe regret to inform you that you have been phished.\n\n%s' % (disp[2]["F_name"], base64.b64encode(disp[2]["Email"]))
 
 
 
@@ -134,25 +166,37 @@ class MainHandler(tornado.web.RequestHandler):
     def get(self):
 		#self.write(csv_r)
 		#self.write(disp)
-		self.write(pin)
+		self.write('<html>Welcome to Alitheia\'s website.  Undergoing Maintenance....</html>')
 		#testmail()
 	
 
 class StartHandler(tornado.web.RequestHandler):
 	def get(self):
-		phish_campaign()
+		#try:
+		#	tp = threading.Thread(target=phish_campaign)
+	        #	tp.start()  
+		#except (KeyboardInterrupt, SystemExit):
+		#	tp.stop()
+		#	sys.exit()
+		global e
+		e.clear()
+		print "Web Request:  Starting Phishing emails..."
+		pc = threading.Thread(target=phish_campaign)
+		pc.start()
 
 class StopHandler(tornado.web.RequestHandler):
     #def initialize(self, db):
         #self.db = db
-
-    def get(self):
-		self.write("Stopping phishing campaign...")
-		ioloop = tornado.ioloop.IOLoop.instance()
-		ioloop.add_callback(ioloop.stop)
-		#print "Asked Tornado to exit"		
-		import os,signal
-		os.kill(os.getpid(), signal.SIGINT)
+	def get(self):
+		#self.write("Stopping phishing campaign...")
+		#ioloop = tornado.ioloop.IOLoop.instance()
+		#ioloop.add_callback(ioloop.stop)
+		global e
+		e.set()
+		print "Web Request: Stopping phishing emails..."
+		#print "Caught SIGKILL"		
+		#import os,signal
+		#os.kill(os.getpid(), signal.SIGKILL)
 		#app = Application([
 		#url(r"/", MainHandler),
 		#url(r"/stop", StopHandler)
@@ -178,7 +222,8 @@ class AccountHandler(tornado.web.RequestHandler):
 				if row['Email'] == test:
 					buf = row['Email'] + ', ' +  row['First Name'] + ', ' + row['Last Name'] + '\n'
 					fp.write(buf)
-					self.write(row['Email'])
+					#self.write(row['Email'])
+					self.write(pin)
 					caught[i] = {"Email": row['Email'], "F_name": row['First Name'], "L_name": row['Last Name']}
 					i += 1
 					print "Added %s" % row['Email']
@@ -226,12 +271,16 @@ def stopTornado():
 def main():
 	print("Starting web server...")
 	#pop_csv()
+	global e
+	e = threading.Event()
 	t = threading.Thread(target=startTornado) 
 	t.start()
-	signal.signal(signal.SIGINT, signal_handler)
-	signal.pause()
-
-
+	#tp = threading.Thread(target=phish_campaign)
+	#tp.start()
+	pop_csv()
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
     main()
+    while True:           # added
+        signal.pause()    # added
