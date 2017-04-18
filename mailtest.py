@@ -6,8 +6,8 @@ from email.MIMEText import MIMEText
 from email.MIMEImage import MIMEImage
 
 # Define these once; use them twice!
-strFrom = '"Accounts Receivable"<rooty@mailserver.s0stgakqb2ju1ifzv343gza4hb.yx.internal.cloudapp.net>'
-strTo = 'nick.pittak@pse.com'
+strFrom = '"Account Management"<noreply@accounts.internal>'
+strTo = 'ben.floyd@pse.com'
 
 # Create the root message and fill in the from, to, and subject headers
 msgRoot = MIMEMultipart()
@@ -25,18 +25,18 @@ msgText = MIMEText('This is the alternative plain text message.')
 msgAlternative.attach(msgText)
 
 # We reference the image in the IMG SRC attribute by the ID we give it below
-mp = open('msg.htm', 'rb')
-msgText = MIMEText(mp, 'html')
-msgAlternative.attach(msgText)
+#mp = open('msg.htm', 'rb')
+#msgText = MIMEText(mp, 'html')
+#msgAlternative.attach(msgText)
 
 # This example assumes the image is in the current directory
-fp = open('test.jpg', 'rb')
-msgImage = MIMEImage(fp.read(), _subtype="jpeg")
-fp.close()
+#fp = open('test.jpg', 'rb')
+#msgImage = MIMEImage(fp.read(), _subtype="jpeg")
+#fp.close()
 
 # Define the image's ID as referenced above
-msgImage.add_header('Content-ID', '<image1>')
-msgRoot.attach(msgImage)
+#msgImage.add_header('Content-ID', '<image1>')
+#msgRoot.attach(msgImage)
 
 # Send the email (this example assumes SMTP authentication is required)
 import smtplib

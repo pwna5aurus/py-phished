@@ -43,9 +43,9 @@ i = 0
 j = 0
 
 #Return address
-fr_addr = 'accounts@alitheia.com'
-to_addr = ''
-ph_link = ''
+#fr_addr = 'noreply@account.internal'
+#to_addr = ''
+#ph_link = ''
 
 #Handle CTRL+C (linux only)
 def signal_handler(signal, frame):
@@ -82,6 +82,13 @@ class phish_campaign:
 						print 'J = %d' % j #, row['Email']
 						targets[j] = {"Email": db[j]['Email'], "F_name": db[j]['F_name']}
   		               			testmail(targets[j])
+				else:
+					if not e.isSet():
+                                        #print row['Email'], row['First Name']
+                                        	print 'J = %d' % j #, row['Email']
+                                        	targets[j] = {"Email": db[j]['Email'], "F_name": db[j]['F_name']}
+                                        	testmail(targets[j])
+
 			else:
 				#print row['Email'], row['First Name']
      	               		targets[j] = {"Email": db[j]['Email'], "F_name": db[j]['F_name']}
@@ -100,13 +107,13 @@ def testmail(target):
 	from email.MIMEMultipart import MIMEMultipart
 	from email.MIMEText import MIMEText
 	from email.MIMEImage import MIMEImage
-	strFrom = '"Accounts Receivable"<internal@accounts.westcentralus.cloudapp.azure.com>'
+	strFrom = '"Account Notification"<noreply@accounts.internal>'
 	strTo = target['Email']
 	strFname = target['F_name']
 
 	# Create the root message and fill in the from, to, and subject headers
 	msgRoot = MIMEMultipart()
-	msgRoot['Subject'] = 'Expired invoice...'
+	msgRoot['Subject'] = 'Web Monitoring Program'
 	msgRoot['From'] = strFrom
 	msgRoot['To'] = strTo
 	#msgRoot.preamble = 'This is a multi-part message in MIME format/'
@@ -115,30 +122,31 @@ def testmail(target):
 	# 'alternative' part, so message agents can decide which they want to display.
 	msgAlternative = MIMEMultipart('alternative')
 	msgRoot.attach(msgAlternative)
-
-	msgText = MIMEText('Your mail client does not support HTML.')
+	
+	t_txt = 'Your mail client does not support HTML.  Please visit http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) 
+	msgText = MIMEText(t_txt)
 	msgAlternative.attach(msgText)
 
 	# We reference the image in the IMG SRC attribute by the ID we give it below
-	msgText = MIMEText('<h1>Hi,' + strFname + ' <br><br>We just wanted to follow up from our meeting the other day when we talked about zeroing out the balance.  Please let me know!<br><br>Best,<br>Ben<br><br>P.S.<a href="http://accounts.westcentralus.cloudapp.azure.com' + base64.b64encode(strTo) + '"><b>Please go update your account with us!<br><br><img src="cid:image1"><br></a>', 'html')
+	msgText = MIMEText('Hello ' + strFname + ', <br><br>Welcome to our web footprint monitoring program!  We have partnered with your company to provide tracking of residual information left on the internet during browsing.  Our goal is to help you avoid sensitive information leakage.  This message is to welcome you and let you know that you have been automatically added to our database as part of this program.  For more information or to opt out of the program, click below.<br><br><a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) + '">Manage Account or Opt Out</a><br><br>-Alitheia Tech Inc.<br><br><br>', 'html')
 	msgAlternative.attach(msgText)
 
 	# This example assumes the image is in the current directory
-	fp = open('test.jpg', 'rb')
-	msgImage = MIMEImage(fp.read(), _subtype="jpeg")
-	fp.close()
+	#fp = open('lock.jpg', 'rb')
+	#msgImage = MIMEImage(fp.read(), _subtype="jpeg")
+	#fp.close()
 
 	# Define the image's ID as referenced above
-	msgImage.add_header('Content-ID', '<image1>')
-	msgRoot.attach(msgImage)
+	#msgImage.add_header('Content-ID', '<image1>')
+	#msgRoot.attach(msgImage)
 
 	# Send the email (this example assumes SMTP authentication is required)
 	import smtplib
-	#smtp = smtplib.SMTP()
-	#smtp.connect('localhost')
-	#smtp.sendmail(strFrom, strTo, msgRoot.as_string())
+	smtp = smtplib.SMTP()
+	smtp.connect('localhost')
+	smtp.sendmail(strFrom, strTo, msgRoot.as_string())
 	print "Email sent to %s" % msgRoot['To']
-	#smtp.quit()
+	smtp.quit()
 
 
 #Populate a python dict with the contents of "targets.csv"
@@ -147,10 +155,10 @@ def pop_csv():
 	global reader
 	global fo
 	fo = open('targets.csv', 'rb')
-	reader = csv.DictReader(fo)
+	reader = csv.DictReader(fo, dialect='excel')
 	for row in reader:
-		#print row['Email'], row['First Name']
-		db[i] = {"Email": row['Email'], "F_name": row['First Name']}
+		print row #['Email'], row['First Name']
+		db[i] = {"Email": row['Email'], "F_name": row['First Name'], "L_name": row['Last Name'], "Dept": row['Department'], "Loc": row['Location'], "Employer": row['Employer'], "Title": row['Title']}
 		i += 1
 	print 'Phishing targets populated.'
 
@@ -207,6 +215,7 @@ class AccountHandler(tornado.web.RequestHandler):
 					print "Added %s" % row['Email']
 		
 		#print "Total people phished: " + len(caught)
+		
 	
 #Defining handlers for various web requests in Tornado			
 def make_app():
