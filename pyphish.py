@@ -123,12 +123,12 @@ def testmail(target):
 	msgAlternative = MIMEMultipart('alternative')
 	msgRoot.attach(msgAlternative)
 	
-	t_txt = 'Your mail client does not support HTML.  Please visit http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) 
+	t_txt = '**Your mail client does not support HTML.  \n\nDear ' + strFname + ',  \n\nYou have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing to prevent sensitive information leakage.  Please visit "http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) + '"\n\n\nThanks,\n\nThe Team\nAlitheia Tech, Inc.'
 	msgText = MIMEText(t_txt)
 	msgAlternative.attach(msgText)
 
 	# We reference the image in the IMG SRC attribute by the ID we give it below
-	msgText = MIMEText('Hello ' + strFname + ', <br><br>Welcome to our web footprint monitoring program!  We have partnered with your company to provide tracking of residual information left on the internet during browsing.  Our goal is to help you avoid sensitive information leakage.  This message is to welcome you and let you know that you have been automatically added to our database as part of this program.  For more information or to opt out of the program, click below.<br><br><a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) + '">Manage Account or Opt Out</a><br><br>-Alitheia Tech Inc.<br><br><br>', 'html')
+	msgText = MIMEText('Hello ' + strFname + ', \n\nWelcome to our web footprint monitoring program!  We have partnered with your company to provide tracking of residual information left on the internet during browsing.  Our goal is to help you avoid sensitive information leakage.  This message is to welcome you and let you know that you have been automatically added to our database as part of this program.  For more information or to opt out of the program, click below.\n\n "http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) + '"\n\nThanks!\n\n-Alitheia Tech Inc.')
 	msgAlternative.attach(msgText)
 
 	# This example assumes the image is in the current directory
