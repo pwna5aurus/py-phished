@@ -28,7 +28,7 @@ import smtplib
 import base64
 import time
 import signal
-
+import os
 
 
 phish_f = "phish.html"
@@ -72,11 +72,11 @@ class phish_campaign:
 		print 'Rows in DB = %d' % len(db)
 		while j < len(db) and not e.isSet():
 			#print db[j]
-			print 'E.isSet() = %s' % e.isSet()
+			#print 'E.isSet() = %s' % e.isSet()
 			if (j % 100 == 0):
 				if (j != 0):
 					print 'Sleeping for 10s'
-					time.sleep(10)
+					time.sleep(1)
 					if not e.isSet():
 					#print row['Email'], row['First Name']
 						print 'J = %d' % j #, row['Email']
@@ -90,11 +90,12 @@ class phish_campaign:
                                         	testmail(targets[j])
 
 			else:
+				time.sleep(1)
 				#print row['Email'], row['First Name']
      	               		targets[j] = {"Email": db[j]['Email'], "F_name": db[j]['F_name']}
 				testmail(targets[j])
 				#print j
-			print j
+			#print j
   	               	j += 1
 
 
@@ -116,29 +117,41 @@ def testmail(target):
 	msgRoot['Subject'] = 'Web Monitoring Program'
 	msgRoot['From'] = strFrom
 	msgRoot['To'] = strTo
-	#msgRoot.preamble = 'This is a multi-part message in MIME format/'
+	msgRoot.preamble = 'This is a multi-part message in MIME format'
 
 	# Encapsulate the plain and HTML versions of the message body in an
 	# 'alternative' part, so message agents can decide which they want to display.
-	msgAlternative = MIMEMultipart('alternative')
-	msgRoot.attach(msgAlternative)
+	#msgAlternative = MIMEMultipart('alternative')
+	#msgRoot.attach(msgAlternative)
 	
-	t_txt = '**Your mail client does not support HTML.  \n\nDear ' + strFname + ',  \n\nYou have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing to prevent sensitive information leakage.  Please visit "http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) + '"\n\n\nThanks,\n\nThe Team\nAlitheia Tech, Inc.'
-	msgText = MIMEText(t_txt)
-	msgAlternative.attach(msgText)
+	t_txt = '**Your mail client does not support HTML.  \n\nDear ' + strFname + ',  \n\nYou have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing to prevent sensitive information leakage.  Please visit "http://ow.ly/slrT30aZWgE/account/' + base64.b64encode(strTo) + '"\n\n\nThanks,\n\nThe Team\nAlitheia Tech, Inc.'
+	#msgText = MIMEText(t_txt, 'plain')
+	#msgAlternative.attach(msgText)
 
+
+	f_html = (open('phish.html','rb')).read()
+	m_html = MIMEText(f_html, 'html')
+	
 	# We reference the image in the IMG SRC attribute by the ID we give it below
-	msgText = MIMEText('Hello ' + strFname + ', \n\nWelcome to our web footprint monitoring program!  We have partnered with your company to provide tracking of residual information left on the internet during browsing.  Our goal is to help you avoid sensitive information leakage.  This message is to welcome you and let you know that you have been automatically added to our database as part of this program.  For more information or to opt out of the program, click below.\n\n "http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/' + base64.b64encode(strTo) + '"\n\nThanks!\n\n-Alitheia Tech Inc.')
-	msgAlternative.attach(msgText)
+	link = """<a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/""" + base64.b64encode(strTo) + '''">Account Management</a>'''
+	print link
+	msgText = """\
+	<html>
+	<head><body>
+	<p>Hello """ + strFname + """,<br><br>You have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing and prevent sensitive information leakage. <br><br><br>Thanks,<br><br>-The Team<br><br>Alitheia Tech, Inc.<br><img src=cid:image1><br><br> To manage your account, please visit <br><br><a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/""" + base64.b64encode(strTo) + '''">Account Management</a>'''
+	temp = open('temp.htm', 'w+')
+	temp.write(msgText)
+	temp.close()
+	msgRoot.attach(MIMEText(open("temp.htm").read(), 'html'))
 
 	# This example assumes the image is in the current directory
-	#fp = open('lock.jpg', 'rb')
-	#msgImage = MIMEImage(fp.read(), _subtype="jpeg")
-	#fp.close()
+	fp = open('lock.jpg', 'rb')
+	msgImage = MIMEImage(fp.read(), _subtype="jpeg")
+	fp.close()
 
 	# Define the image's ID as referenced above
-	#msgImage.add_header('Content-ID', '<image1>')
-	#msgRoot.attach(msgImage)
+	msgImage.add_header('Content-ID', '<image1>')
+	msgRoot.attach(msgImage)
 
 	# Send the email (this example assumes SMTP authentication is required)
 	import smtplib
@@ -147,7 +160,7 @@ def testmail(target):
 	smtp.sendmail(strFrom, strTo, msgRoot.as_string())
 	print "Email sent to %s" % msgRoot['To']
 	smtp.quit()
-
+	os.remove('temp.htm')
 
 #Populate a python dict with the contents of "targets.csv"
 def pop_csv():
@@ -157,8 +170,8 @@ def pop_csv():
 	fo = open('targets.csv', 'rb')
 	reader = csv.DictReader(fo, dialect='excel')
 	for row in reader:
-		print row #['Email'], row['First Name']
-		db[i] = {"Email": row['Email'], "F_name": row['First Name'], "L_name": row['Last Name'], "Dept": row['Department'], "Loc": row['Location'], "Employer": row['Employer'], "Title": row['Title']}
+		#print row #['Email'], row['First Name']
+		db[i] = {"Email": row['Email'], "F_name": row['First Name'], "L_name": row['Last Name'], "Dept": row['Department'], "Loc": row['Location'], "Company": row['Company']}
 		i += 1
 	print 'Phishing targets populated.'
 
