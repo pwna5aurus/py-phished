@@ -41,6 +41,7 @@ db = {}
 caught = {}
 i = 0
 j = 0
+sent = {}
 
 #Return address
 #fr_addr = 'noreply@account.internal'
@@ -101,10 +102,9 @@ class phish_campaign:
 
 #Called by "phish_campaign"
 def testmail(target):
-
+	global sent
 	# Send an HTML email with an embedded image and a plain text message for
 	# email clients that don't want to display the HTML.
-
 	from email.MIMEMultipart import MIMEMultipart
 	from email.MIMEText import MIMEText
 	from email.MIMEImage import MIMEImage
@@ -112,55 +112,58 @@ def testmail(target):
 	strTo = target['Email']
 	strFname = target['F_name']
 
-	# Create the root message and fill in the from, to, and subject headers
-	msgRoot = MIMEMultipart()
-	msgRoot['Subject'] = 'Web Monitoring Program'
-	msgRoot['From'] = strFrom
-	msgRoot['To'] = strTo
-	msgRoot.preamble = 'This is a multi-part message in MIME format'
+	if strTo not in sent:
+		# Create the root message and fill in the from, to, and subject headers
+		msgRoot = MIMEMultipart()
+		msgRoot['Subject'] = 'Web Monitoring Program'
+		msgRoot['From'] = strFrom
+		msgRoot['To'] = strTo
+		msgRoot.preamble = 'This is a multi-part message in MIME format'
 
-	# Encapsulate the plain and HTML versions of the message body in an
-	# 'alternative' part, so message agents can decide which they want to display.
-	#msgAlternative = MIMEMultipart('alternative')
-	#msgRoot.attach(msgAlternative)
-	
-	t_txt = '**Your mail client does not support HTML.  \n\nDear ' + strFname + ',  \n\nYou have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing to prevent sensitive information leakage.  Please visit "http://ow.ly/slrT30aZWgE/account/' + base64.b64encode(strTo) + '"\n\n\nThanks,\n\nThe Team\nAlitheia Tech, Inc.'
-	#msgText = MIMEText(t_txt, 'plain')
-	#msgAlternative.attach(msgText)
+		# Encapsulate the plain and HTML versions of the message body in an
+		# 'alternative' part, so message agents can decide which they want to display.
+		#msgAlternative = MIMEMultipart('alternative')
+		#msgRoot.attach(msgAlternative)
+		
+		t_txt = '**Your mail client does not support HTML.  \n\nDear ' + strFname + ',  \n\nYou have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing to prevent sensitive information leakage.  Please visit "http://ow.ly/slrT30aZWgE/account/' + base64.b64encode(strTo) + '"\n\n\nThanks,\n\nThe Team\nAlitheia Tech, Inc.'
+		#msgText = MIMEText(t_txt, 'plain')
+		#msgAlternative.attach(msgText)
 
 
-	f_html = (open('phish.html','rb')).read()
-	m_html = MIMEText(f_html, 'html')
-	
-	# We reference the image in the IMG SRC attribute by the ID we give it below
-	link = """<a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/""" + base64.b64encode(strTo) + '''">Account Management</a>'''
-	print link
-	msgText = """\
-	<html>
-	<head><body>
-	<p>Hello """ + strFname + """,<br><br>You have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing and prevent sensitive information leakage. <br><br><br>Thanks,<br><br>-The Team<br><br>Alitheia Tech, Inc.<br><img src=cid:image1><br><br> To manage your account, please visit <br><br><a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/""" + base64.b64encode(strTo) + '''">Account Management</a>'''
-	temp = open('temp.htm', 'w+')
-	temp.write(msgText)
-	temp.close()
-	msgRoot.attach(MIMEText(open("temp.htm").read(), 'html'))
+		f_html = (open('phish.html','rb')).read()
+		m_html = MIMEText(f_html, 'html')
+		
+		# We reference the image in the IMG SRC attribute by the ID we give it below
+		link = """<a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/""" + base64.b64encode(strTo) + '''">Account Management</a>'''
+		print link
+		msgText = """\
+		<html>
+		<head><body>
+		<p>Hello """ + strFname + """,<br><br>You have been automatically enrolled in the Web Activity Monitoring Program.  We have partnered with your company to track your browsing and prevent sensitive information leakage. <br><br><br>Thanks,<br><br>-The Team<br><br>Alitheia Tech, Inc.<br><img src=cid:image1><br><br> To manage your account, please visit <br><br><a href="http://ec2-54-201-17-210.us-west-2.compute.amazonaws.com/account/""" + base64.b64encode(strTo) + '''">Account Management</a>'''
+		temp = open('temp.htm', 'w+')
+		temp.write(msgText)
+		temp.close()
+		msgRoot.attach(MIMEText(open("temp.htm").read(), 'html'))
 
-	# This example assumes the image is in the current directory
-	fp = open('lock.jpg', 'rb')
-	msgImage = MIMEImage(fp.read(), _subtype="jpeg")
-	fp.close()
+		# This example assumes the image is in the current directory
+		fp = open('lock.jpg', 'rb')
+		msgImage = MIMEImage(fp.read(), _subtype="jpeg")
+		fp.close()
 
-	# Define the image's ID as referenced above
-	msgImage.add_header('Content-ID', '<image1>')
-	msgRoot.attach(msgImage)
+		# Define the image's ID as referenced above
+		msgImage.add_header('Content-ID', '<image1>')
+		msgRoot.attach(msgImage)
 
-	# Send the email (this example assumes SMTP authentication is required)
-	import smtplib
-	smtp = smtplib.SMTP()
-	smtp.connect('localhost')
-	smtp.sendmail(strFrom, strTo, msgRoot.as_string())
-	print "Email sent to %s" % msgRoot['To']
-	smtp.quit()
-	os.remove('temp.htm')
+		# Send the email (this example assumes SMTP authentication is required)
+		import smtplib
+		smtp = smtplib.SMTP()
+		smtp.connect('localhost')
+		smtp.sendmail(strFrom, strTo, msgRoot.as_string())
+		print "Email sent to %s" % msgRoot['To']
+		smtp.quit()
+		os.remove('temp.htm')
+		global sent{}
+		sent = sent + strTo
 
 #Populate a python dict with the contents of "targets.csv"
 def pop_csv():
